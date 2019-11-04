@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void initMap() {
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment);
         mapFragment.getMapAsync(this);
+        // test comment 
 
     }
 
