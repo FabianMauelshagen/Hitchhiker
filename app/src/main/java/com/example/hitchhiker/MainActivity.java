@@ -76,26 +76,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mGoogleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
         //Toast.makeText(this, "On Map ready!", Toast.LENGTH_LONG).show();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                // public void requestPermissions(@NonNull String[] permissions, int requestCode)
-                // here to request the missing permissions, and then overriding
-                // public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                // int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for Activity#requestPermissions for more details.
-                return;
-            }
-        }
-        mGoogleMap.setMyLocationEnabled(true);
-
-        /*mGoogleApiClient = new GoogleApiClient.Builder(this)
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
-        mGoogleApiClient.connect();*/
+        mGoogleApiClient.connect();
     }
 
     private void goToLocationZoom(double lat, double lng, int zoom) {
@@ -128,6 +114,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mLocationRequest.setInterval(1000);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
                 // public void requestPermissions(@NonNull String[] permissions, int requestCode)
@@ -136,9 +123,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // int[] grantResults)
                 // to handle the case where the user grants the permission. See the documentation
                 // for Activity#requestPermissions for more details.
+                //
+
                 return;
             }
         }
+        Toast.makeText(this, "Perfect!", Toast.LENGTH_LONG).show();
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
     }
 
