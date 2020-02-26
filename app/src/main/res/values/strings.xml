@@ -1,7 +1,47 @@
+
 <resources>
     <string name="app_name">Hitchhiker</string>
     <string name="hello">Hello</string>
     <string name="button">Button</string>
     <string name="driver">Driver</string>
     <string name="title_activity_loading_activity">loading_activity</string>
+    <string name="loginDone">Sie werden eingeloggt.</string>
+    <string name="logindatenEingeben">Bitte Logindaten Eingeben! </string>
+    <string name="loginNotDone">Login fehlgeschlagen. Username oder Passwort falsch </string>
+    <string name="standortAktual">Möchtest du deinen Standort wirklich aktualisieren?\n(Ist dein Ziel noch aktuell?) </string>
+    <string name="standortLoeschen">Möchtest du deinen Standort wirklich löschen? </string>
+    <string name="wirstAbgeholt">Ein Fahrer ist bereits auf dem Weg zu dir!</string>
+    <string name="hikerGone">Der Hiker hat seinen Standort gelöscht. Er will nicht mehr abgeholt werden.</string>
+    <string name="achtung">Achtung!</string>
+    <string name="titleStandortAktual">Standort Aktualisieren?</string>
+    <string name="titleStandortLoeschen">Standort Löschen?</string>
+    <string name="modusWechselnFahrer">Du kannst erst zum Driver Modus wechseln wenn du deinen Standort gelöscht hast!</string>
+    <string name="modusWechselnHiker">Du kannst erst zum Hiker Modus wechseln wenn du niemanden mehr abholst!</string>
+    <string name="hikerMesg">\u0020ist auf dem Weg zu dir, bleib einfach wo du bist.</string>
+    <string name="messageTo">Super! Nachricht an\u0020</string>
+    <string name="sent">\u0020gesendet!</string>
+    <string name="willstDu">Möchtest du\u0020</string>
+    <string name="abholen">\u0020abholen?</string>
+    <string name="deinZiel">Dein Ziel:\u0020</string>
+    <string name="schade">Kein Problem, es findet sich ein anderen Fahrer</string>
+    <string name="dasBistDu">Das bist du! </string>
+    <string name="titleHikerGone">Standort gelöscht! </string>
+    <string name="regesteringDone">Registrierung erfolgreich </string>
+    <string name="regesteringNotDone">Registrierung fehlgeschlagen </string>
+    <string name="bitteAusfüllen">Bitte füllen Sie die Felder aus </string>
+    <string name="benutzername">Benutzername </string>
+    <string name="password">Passwort </string>
+    <string name="signUp">Noch nicht registriert? Sign Up. </string>
+    <string name="hikerMitnehmen">Hiker mitnehmen? </string>
+    <string name="zielEingeben">Gib dein Ziel ein</string>
+    <string name="passwortMin6">Passwort (Min 6 Zeichen)</string>
+    <string name="signIn">Bereits registriert? Melde dich an.</string>
+    <string name="titleFehlendesZiel">Fehlendes Ziel</string>
+    <string name="fehlendesZiel">Gib bitte zuerst ein Ziel ein.</string>
+    <string name="sName">Name:\u0020</string>
+    <string name="sDest">Ziel:\u0020</string>
+    <string name="messageFail">Nachricht fehlgeschlagen</string>
+    <string name="titelZielLoesch">Ziel löschen?</string>
+    <string name="stringZielLoesch">Wollen Sie ihr Ziel löschen?</string>
+
 </resources>
