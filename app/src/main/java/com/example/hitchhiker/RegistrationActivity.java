@@ -43,7 +43,7 @@ public class RegistrationActivity extends AppCompatActivity {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
 
-                            if(task.isSuccessful()){
+                            if(task.isSuccessful()){ // If successful the MapActivity starts with the user already logged in
                                 Toast.makeText(RegistrationActivity.this, getString(R.string.regesteringDone), Toast.LENGTH_SHORT).show();
                                 startActivity(new Intent(RegistrationActivity.this, MainActivity.class));
                             }else{
@@ -55,6 +55,7 @@ public class RegistrationActivity extends AppCompatActivity {
             }
         });
 
+        // Starts the MainActivity (LoginActivity)
         userLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -71,6 +72,7 @@ public class RegistrationActivity extends AppCompatActivity {
         userLogin = (TextView)findViewById(R.id.tvUserLogin);
     }
 
+    // Checks if all fields are filled
     private Boolean validate(){
         Boolean result = false;
 

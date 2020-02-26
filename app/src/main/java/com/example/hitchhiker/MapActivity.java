@@ -72,23 +72,23 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     GoogleMap mGoogleMap;   // Our Google Map, later used to modify the Map
     FusedLocationProviderClient fusedLocationClient;
-    String profileType = "Driver";
+    String profileType = "Driver"; // Default Profile Type
     GoogleApiClient mGoogleApiClient;
     public static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
-    DatabaseReference database =
+    DatabaseReference database = //Reference to the Firebase Database which the app is connected with. The connection is stored in the values.xml file
             FirebaseDatabase.getInstance().getReference();
-    DatabaseReference ref = database.child("/Markers");     // Reference on the database child "Markers" where our Markers are stored
-    DatabaseReference msg = database.child("/Messages");    // Reference on the database child "Messages" where our Messages "who picks up who" are stroed
-    DatabaseReference dest = database.child("/Destination");
+    DatabaseReference ref = database.child("/Markers");     // Reference on the database child "Markers" where the Markers are stored
+    DatabaseReference msg = database.child("/Messages");    // Reference on the database child "Messages" where the Messages "who picks up who" are stroed
+    DatabaseReference dest = database.child("/Destination");    // Reference on the database child "Destination" where the destinations are stored
     String userMail = MainActivity.firebaseAuth.getCurrentUser().getEmail();
-    String[] email = userMail.split("[@._]");
+    String[] email = userMail.split("[@._]");   //Splits the email of the user to gather the users username (The user creates an account with a username, the name is stored in the firebase authentitacion db with an additional @moco)
     char firstLetter = email[0].charAt(0);
     String firstLetterUp = String.valueOf(firstLetter).toUpperCase();
     String emailName =  firstLetterUp + email[0].substring(1);
     String getMsg = emailName + "";
-    String uid = "/" + MainActivity.firebaseAuth.getUid() + "_" + emailName;
+    String uid = "/" + MainActivity.firebaseAuth.getUid() + "_" + emailName;    // String that represents a child of the firebase db for search purpose or to store in the db
     final String userid = MainActivity.firebaseAuth.getUid() + "_" + emailName; // These lines are for getting the driver Name and for visualizing it correctly in the messages.
-    Marker ownMarker;
+    Marker ownMarker;   // Own Loacation Marker
     Marker searchMarker; // Destination Marker
     Marker del; // Delete Marker for deleting own location Marker
     EditText searchBar; // Used for searching for the destination
@@ -632,7 +632,7 @@ public void shareLocation(View view){
         mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mGoogleMap.setTrafficEnabled(true);
         //Toast.makeText(this, "On Map ready!", Toast.LENGTH_LONG).show();
-        mGoogleMap.setMyLocationEnabled(true);
+        mGoogleMap.setMyLocationEnabled(true); //Tracks the users position on the map in realtime (Blue point)
         mGoogleMap.setOnMyLocationClickListener(new GoogleMap.OnMyLocationClickListener() {
             @Override
             public void onMyLocationClick(@NonNull Location location) {
@@ -640,12 +640,14 @@ public void shareLocation(View view){
             }
         });
         mGoogleMap.setOnMarkerClickListener(this);
-        mGoogleMap.getUiSettings().setMyLocationButtonEnabled(false);
+        mGoogleMap.getUiSettings().setMyLocationButtonEnabled(false); // Implemented manually
         mGoogleMap.setOnMyLocationButtonClickListener(this);
         mGoogleMap.getUiSettings().setCompassEnabled(true);
+        // If the user holds a click near his destination, an alertDialog pops up and the user can remove his destination
         mGoogleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(LatLng latLng) {
+                // compares the destination Markers (searchMarker) LatLng with the LatLng Object of the OnMapLongClick if its nearly the same position
                 if(Math.abs(searchMarker.getPosition().latitude - latLng.latitude) < 0.03 && Math.abs(searchMarker.getPosition().longitude - latLng.longitude) < 0.03) {
                     AlertDialog alertDialog = new AlertDialog.Builder(MapActivity.this).create();
                     alertDialog.setTitle(getString(R.string.titelZielLoesch));
@@ -670,6 +672,7 @@ public void shareLocation(View view){
                 }
             }
         });
+        //Connects to the Google API Services
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
                 .addConnectionCallbacks(this)
@@ -678,19 +681,22 @@ public void shareLocation(View view){
         mGoogleApiClient.connect();
     }
 
+    // Unused function to center the map on a given position with a given zoom
     private void goToLocationZoom(double lat, double lng, int zoom) {
         LatLng ll = new LatLng(lat, lng);
         CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, zoom);
         mGoogleMap.moveCamera(update);
     }
 
+    // This function changes the profile type the user is using
     public void changeProfile(View view) {
 
         final Button carPerson = findViewById(R.id.profileTypeBtn);
         final Button markerBtn = findViewById(R.id.markerBtn);
         final ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) carPerson.getLayoutParams();
         if (profileType == "Driver") {
-            msg.addListenerForSingleValueEvent(new ValueEventListener() {
+            // Alerts the user if a pickup message was sent before, so the user cant change the profile unless he deletes the message
+            msg.addListenerForSingleValueEvent(new ValueEventListener() { // Checks the firebase db if a pickup message was sent by the user
                 boolean alert = false;
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -711,6 +717,7 @@ public void shareLocation(View view){
                 }
             });
 
+            // Can only change to Driver Mode if the user has no own Location online
         } else if (profileType == "Hitchhiker") {
             if(ownMarker != null) {
                 AlertDialog alertDialog = new AlertDialog.Builder(MapActivity.this).create();
@@ -731,6 +738,7 @@ public void shareLocation(View view){
         }
     }
 
+    // Method to set the hiker
     public void setHiker(Button markerButton, Button profileButton, ConstraintLayout.LayoutParams layout){
         profileButton.setBackground(getResources().getDrawable(R.drawable.tourist));
         layout.height = 155;
@@ -743,20 +751,21 @@ public void shareLocation(View view){
         LinearLayout lay = findViewById(R.id.seekBarLayout);
         radar.setVisibility(View.INVISIBLE);
         lay.setVisibility(View.INVISIBLE);
-        distance = 40;
+        distance = 40;  //Default distance in which hiker see other hikers on the map
         for(Marker marker: mMarkers){
             marker.remove();
         }
         mMarkers.clear();
+        // Reloads the Hikers on the map to the default distance
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for(DataSnapshot child: dataSnapshot.getChildren()){
-                    if(!child.getKey().equals(userid)){
+                    if(!child.getKey().equals(userid)){ // If its not the users location
                         Double lat = (Double) child.child("/latitude").getValue();
                         Double lng = (Double) child.child("/longitude").getValue();
                         String key = child.getKey();
-                        calcDistance(lat, lng, key);
+                        calcDistance(lat, lng, key); // Sets the new Hikers with the default distance
                     }
                 }
             }
@@ -767,6 +776,7 @@ public void shareLocation(View view){
         });
     }
 
+    // Method that sets the Profile to driver mode
     public void setDriver(Button markerButton, Button profileButton, ConstraintLayout.LayoutParams layout){
         profileButton.setBackground(getResources().getDrawable(R.drawable.car_blue));
         layout.height = 250;
@@ -779,6 +789,7 @@ public void shareLocation(View view){
         radar.setVisibility(View.VISIBLE);
     }
 
+    // Initializes the main Buttons for the driver
     public void setButtonVisibility(Boolean bool){
         Button get = findViewById(R.id.getHimBtn);
         Button leave = findViewById(R.id.leaveHimBtn);
@@ -794,6 +805,7 @@ public void shareLocation(View view){
         }
     }
 
+    // The following 10 lines are unused, they would allow the user to track his position with an automatic camera (User view on the Map) update (Could later be used for navigating the driver)
     LocationRequest mLocationRequest;
 
     @Override
@@ -805,6 +817,7 @@ public void shareLocation(View view){
         //LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
     }
 
+    // Updates the Camera to the users current location
     public void getCurrentLocation() {
         LocationServices.getFusedLocationProviderClient(this).getLastLocation()
                 .addOnSuccessListener(this, new OnSuccessListener<Location>() {
@@ -819,11 +832,12 @@ public void shareLocation(View view){
                 });
     }
 
+    // Method that calculates the distance between other hikers and the users position, if within a given distance, the hikers will be shown on the map
     public void calcDistance(final double lat, final double lng, final String key){
         LocationServices.getFusedLocationProviderClient(this).getLastLocation()
                 .addOnSuccessListener(this, new OnSuccessListener<Location>() {
                     @Override
-                    public void onSuccess(Location location) {
+                    public void onSuccess(Location location) { // Gets the Users Location
                         if (location != null) {
                             Location myLocation = new Location("My Loc");
                             myLocation.setLatitude(location.getLatitude());
@@ -831,8 +845,8 @@ public void shareLocation(View view){
                             Location hikerLocation = new Location("Hiker Loc");
                             hikerLocation.setLatitude(lat);
                             hikerLocation.setLongitude(lng);
-                            if(myLocation.distanceTo(hikerLocation) < (distance * 1000)) {
-                                setMarker(lat, lng, key);
+                            if(myLocation.distanceTo(hikerLocation) < (distance * 1000)) { // distance is measured in km, distanceTo in meters
+                                setMarker(lat, lng, key); // Calls the setMarker Method to set the Markers of the map if they are within the given distance
                             }
                         }
                     }
@@ -840,16 +854,19 @@ public void shareLocation(View view){
     }
 
 
+    // Belongs to the Method in Line 821 - unused
     @Override
     public void onConnectionSuspended(int i) {
 
     }
 
+    // Belongs to the Method in Line 821 - unused
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
 
+    // Updates the Camera to the current location, if the location has changed
     @Override
     public void onLocationChanged(Location location) {
         if (location == null) {
@@ -861,17 +878,20 @@ public void shareLocation(View view){
         }
     }
 
+    //Unused
     @Override
     public boolean onMyLocationButtonClick() {
         Toast.makeText(this, "MyLoc Btn clicked", Toast.LENGTH_SHORT).show();
         return false;
     }
 
+    //Unused
     @Override
     public void onMyLocationClick(@NonNull Location location) {
     //    Toast.makeText(this, "Current Loc:\n" + location, Toast.LENGTH_LONG).show();
     }
 
+    // Checks if the needed Permissions are given
     public void reqPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -886,6 +906,7 @@ public void shareLocation(View view){
         }
     }
 
+    // Reacts on the permission request, shuts down the app if the permission was denied
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String[] permissions, int[] grantResults) {
@@ -894,11 +915,9 @@ public void shareLocation(View view){
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
+                    // permission granted
                 } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
+                    // permission denied
                     finish();
                 }
                 return;
@@ -906,63 +925,66 @@ public void shareLocation(View view){
         }
     }
 
+    // logs out the user
     public void logout(){
         MainActivity.firebaseAuth.signOut();
         startActivity(new Intent(MapActivity.this, MainActivity.class));
         finish();
     }
 
+    // The menu in the action bar that contains the logout button
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
+    // Adds the menu points to the OptionsMenu in the action Bar
     @Override
     public boolean onOptionsItemSelected(MenuItem item) { switch(item.getItemId()) {
         case R.id.logout:
             logout();
             return(true);
-        case R.id.home:
+        case R.id.home: // unused
             finish();
             return(true);
     }
         return(super.onOptionsItemSelected(item));
     }
 
+    // To prevent the app to change to the login Activity without logging out the user, sets the Task to the back instead
     @Override
     public void onBackPressed() {
         moveTaskToBack(true);
     }
 
+    // Method to handle clicks on different Markers
     @Override
     public boolean onMarkerClick(final Marker mymarker) {
-        if (mymarker.equals(ownMarker)) {
+        if (mymarker.equals(ownMarker)) { // Opens the delete marker for the users own Location Marker
             if (del != null) {
                 removeDel();
             } else {
                 setDel();
             }
             return true;
-        } else if (mymarker.equals(del)) {
+        } else if (mymarker.equals(del)) { // Deletes the users location marker and delete marker if clicked
             delLocation();
             removeDel();
-        } else if(mymarker.equals(searchMarker)){
-
-        } else {
+        } else { // Differs based on the current Profile Type, if a driver clicks on a marker, the pickup buttons and hiker information will be shown on the map
             if(profileType != "Hitchhiker") {
                 final Button getHim = findViewById(R.id.getHimBtn);
                 final Button leaveHim = findViewById(R.id.leaveHimBtn);
-                final String snipID = "/" + mymarker.getSnippet();
-                final String[] hikerSnip = mymarker.getSnippet().split("_");
+                final String snipID = "/" + mymarker.getSnippet();  //Represents the hikers key in the firebase db
+                final String[] hikerSnip = mymarker.getSnippet().split("_"); //Splits the Snippet of the Hiker Marker into the hikers uid and the hikers name. The name is shown to the driver
                 final String hikerName = hikerSnip[1];
-                final String[] hikerDest = new String[1];
-                dest.addListenerForSingleValueEvent(new ValueEventListener() {
+                final String[] hikerDest = new String[1]; // Array to store the destination information gathered from the firebase request below
+                dest.addListenerForSingleValueEvent(new ValueEventListener() {  // Gets the hikers destination from the firebase db
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         for(DataSnapshot child: dataSnapshot.getChildren()){
                             if(child.getKey().equals(mymarker.getSnippet())){
-                                 hikerDest[0] = child.getValue().toString();
+                                 hikerDest[0] = child.getValue().toString(); // Stores the hikers destination in the hikerDest String Array at index 0
                             }
                         }
                         showHikerInfo(hikerName, hikerDest[0]);
@@ -973,20 +995,20 @@ public void shareLocation(View view){
 
                     }
                 });
-                if(getHim.getVisibility() == View.VISIBLE) {
+                if(getHim.getVisibility() == View.VISIBLE) { // to remove the pickup Buttons
                     setButtonVisibility(false);
                 } else {
                     setButtonVisibility(true);
                     getHim.setOnClickListener(new View.OnClickListener() {
                         @Override
-                        public void onClick(View v) {
-                            try {
+                        public void onClick(View v) {    // To send a pickup message to the hiker
+                            try { // prevents a NullPointerException, if the hiker deletes his location the moment before the driver sends the message
                                 ref.addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                         if(dataSnapshot.child(snipID).exists()) {
                                             writeNewMsg(userid, getMsg, snipID);
-                                            mymarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.locmarkergreen));
+                                            mymarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.locmarkergreen)); // The hiker the driver wants to collect is shown with a green location marker
                                             Toast.makeText(MapActivity.this, getString(R.string.messageTo) + hikerName + getString(R.string.sent), Toast.LENGTH_SHORT).show();
                                         } else {
                                             Toast.makeText(MapActivity.this, getString(R.string.messageFail), Toast.LENGTH_SHORT).show();
@@ -1008,7 +1030,7 @@ public void shareLocation(View view){
                 leaveHim.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        try {
+                        try {   // Same with the leaveHim Button, the try catch prevents a NullPointerException if the hiker deletes his location
                             msg.addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -1030,7 +1052,7 @@ public void shareLocation(View view){
                             mymarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.locmarkeryellow));
                             Toast toast = Toast.makeText(MapActivity.this, getString(R.string.schade), Toast.LENGTH_SHORT);
                             TextView vv = (TextView) toast.getView().findViewById(android.R.id.message);
-                            if (vv != null) vv.setGravity(Gravity.CENTER);
+                            if (vv != null) vv.setGravity(Gravity.CENTER); // Centers the string within the Toast Message
                             toast.show();
                         } catch(Exception e) {
                             setButtonVisibility(false);
@@ -1042,7 +1064,7 @@ public void shareLocation(View view){
         //return true;
         return false;
     }
-
+    //Initializes the Hiker Infos that are shown to the driver
     public void showHikerInfo(String name, String dest){
         TextView hikerText = findViewById(R.id.mitnehmenTV);
         TextView uName = findViewById(R.id.userName);
@@ -1053,12 +1075,14 @@ public void shareLocation(View view){
         hikerText.setText(message);
     }
 
+    //Initializes the Delete Marker, it is implemented as a marker to set the delete marker at the same position as the ownLocation Marker
     public void setDel(){
         LatLng pos = ownMarker.getPosition();
         del = mGoogleMap.addMarker(new MarkerOptions().position(pos)
             .icon(BitmapDescriptorFactory.fromResource(R.drawable.cancelbig)));
     }
 
+    //Method to remove the Delete Marker
     public void removeDel(){
         if(del != null){
             del.remove();
@@ -1066,11 +1090,13 @@ public void shareLocation(View view){
         }
     }
 
+    //Unused
     public void initMsgPush(){
         RelativeLayout rel = findViewById(R.id.msg_layout);
         if(profileType == "hitchhiker") rel.setVisibility(View.VISIBLE);
     }
 
+    // Constructor for the message object, stored in the firebase db
     public class Message {
         public String driverID;
         public String message;
@@ -1085,11 +1111,13 @@ public void shareLocation(View view){
 
     }
 
+    //Method to create a new Message Object
     private void writeNewMsg(String userS, String messageS, String snipS) {
         Message msgObj = new Message(userS, messageS);
         msg.child(snipS).setValue(msgObj);
     }
 
+    //Method to check if the Mmessage Button is active
     public boolean messageActive(){
         Button msgBtn = findViewById(R.id.mailBtn);
         if(msgBtn.getVisibility() == View.VISIBLE){
@@ -1098,6 +1126,7 @@ public void shareLocation(View view){
         return false;
     }
 
+    // Method to start a profile alert if a driver has an active pickup message
     public void profileAlert(){
         AlertDialog alertDialog = new AlertDialog.Builder(MapActivity.this).create();
         alertDialog.setTitle(getString(R.string.achtung));
@@ -1111,6 +1140,8 @@ public void shareLocation(View view){
         alertDialog.show();
     }
 
+    // Initializes the Location Markers of the hikers which have an active pickup message in the firebase db that was sent by the user
+    // For persistence purpose
     public void initGettingLocations() {
             msg.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override

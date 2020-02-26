@@ -55,15 +55,16 @@ public class MainActivity extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         progressDialog = new ProgressDialog(this);
 
-        FirebaseUser user = firebaseAuth.getCurrentUser();
+        FirebaseUser user = firebaseAuth.getCurrentUser();  // Current logged user
 
 
-
+        // If a user is logged in, the map Activity starts
         if (user != null){
             finish();
             startActivity(new Intent(MainActivity.this, MapActivity.class));
         }
 
+        // Logs the user, if the validation is successful
         Login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -72,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Changes to the registration activity
         userRegistration.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -81,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // moves the Task to the back, prevents the user from going back to the map activity if he was logged out
     @Override
     public void onBackPressed() {
         moveTaskToBack(true);
@@ -95,8 +98,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }*/
 
+    //validates the user with a request to the Firebase Authentication DB
     private void validate(String userName, String userPassword){
-        userName = userName + "@moco.de";
+        userName = userName + "@moco.de"; // The firebase Authentication uses an email to validate the user but the hitchhiker app uses a combination of username and password so the username is concatenated with an @moco String
         if(userName.isEmpty() || userPassword.isEmpty()){
             Toast.makeText(MainActivity.this, getString(R.string.logindatenEingeben), Toast.LENGTH_SHORT).show();
         } else {
@@ -121,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //Requests the permission that are needed to use the App
     public void reqPermissions(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -134,6 +139,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //handles the reqPermission results
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String[] permissions, int[] grantResults) {
@@ -142,21 +148,17 @@ public class MainActivity extends AppCompatActivity {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
+                    // permission was granted
                 } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
+                    // permission denied
                     finish();
                 }
                 return;
             }
-
-            // other 'case' lines to check for other
-            // permissions this app might request.
         }
     }
 
+    // Method that hides the Keyboard when called
     public static void hideKeyboard(Activity activity) {
         InputMethodManager imm = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
         //Find the currently focused view, so we can grab the correct window token from it.
