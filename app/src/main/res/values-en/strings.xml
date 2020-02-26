@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <string name="app_name">Hitchhiker</string>
+    <string name="hello">Hello</string>
+    <string name="button">Button</string>
+    <string name="driver">Driver</string>
+    <string name="title_activity_loading_activity">loading_activity</string>
+    <string name="loginDone">Successfully logged in!</string>
+    <string name="logindatenEingeben">Please enter your login Data</string>
+    <string name="loginNotDone">Your email or password were incorrect.</string>
+    <string name="standortAktual">Sure you want to update your Location?\n(Is your destination up-to-date?)</string>
+    <string name="standortLoeschen">Sure you want to remove your Location? Drivers wont be able to pick you up anymore!</string>
+    <string name="wirstAbgeholt">A Driver is coming to pick you up. Stay right where you are!</string>
+    <string name="hikerGone">Hiker removed his Location. Maybe he found another ride!</string>
+    <string name="achtung">Caution!</string>
+    <string name="titleStandortAktual">Update Location?</string>
+    <string name="titleStandortLoeschen">Remove Location?</string>
+    <string name="modusWechselnFahrer">You can only switch to Driver Mode once you have removed your Location from the Map!</string>
+    <string name="modusWechselnHiker">You can only switch to Hiker mode when you dont pick anyone else up!</string>
+    <string name="hikerMesg">\u0020is on his way to pick you up. Stay right where you are!</string>
+    <string name="messageTo">Perfect!\u0020</string>
+    <string name="sent">\u0020has been notified</string>
+    <string name="willstDu">Can you pick\u0020 </string>
+    <string name="abholen">\u0020up?</string>
+    <string name="deinZiel">Your Destination:\u0020</string>
+    <string name="schade">No problem, there will be another driver</string>
+    <string name="dasBistDu">This is where you are! </string>
+    <string name="titleHikerGone">Location removed! </string>
+    <string name="regesteringDone">Successfully registered!</string>
+    <string name="regesteringNotDone">Registering not Successful! </string>
+    <string name="bitteAusfüllen">Please enter your data </string>
+    <string name="benutzername">Username</string>
+    <string name="password">Password </string>
+    <string name="signUp">Not yet registered? Sign up! </string>
+    <string name="hikerMitnehmen">Pick Hiker up? </string>
+    <string name="zielEingeben">Enter your destination</string>
+    <string name="passwortMin6">Password (Min 6 charact.)</string>
+    <string name="signIn">Already registered? Sign in!</string>
+    <string name="titleFehlendesZiel">Missing Destination</string>
+    <string name="fehlendesZiel">Please enter your destination first</string>
+    <string name="sName">Name:\u0020</string>
+    <string name="sDest">Destination:\u0020</string>
+    <string name="messageFail">Message failed.</string>
+    <string name="titelZielLoesch">Remove destination?</string>
+    <string name="stringZielLoesch">Do you want to remove your destination?</string>
+
+
+</resources>

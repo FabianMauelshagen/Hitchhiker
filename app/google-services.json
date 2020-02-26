@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "803701073606",
+    "firebase_url": "https://logindemo-7cd87.firebaseio.com",
+    "project_id": "logindemo-7cd87",
+    "storage_bucket": "logindemo-7cd87.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:803701073606:android:4cb7def4f1bc2544a599c7",
+        "android_client_info": {
+          "package_name": "com.example.hitchhiker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "803701073606-97jtoeg6trii4v0qk9eiaogkm2avuh5m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzdHPxAEtL37naBNbGOLYJfarPR2P8Ge8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "803701073606-97jtoeg6trii4v0qk9eiaogkm2avuh5m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
