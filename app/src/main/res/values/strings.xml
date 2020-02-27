@@ -43,5 +43,7 @@
     <string name="messageFail">Nachricht fehlgeschlagen</string>
     <string name="titelZielLoesch">Ziel löschen?</string>
     <string name="stringZielLoesch">Wollen Sie ihr Ziel löschen?</string>
+    <string name="notConnected">Du bist nicht mit dem Internet verbunden, bitte überprüfe deine Mobilen Daten!\nDie App funktioniert nur eingeschränkt.</string>
+    <string name="titleNotConnected">Nicht verbunden!</string>
 
 </resources>

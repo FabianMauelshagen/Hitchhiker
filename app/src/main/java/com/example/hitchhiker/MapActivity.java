@@ -10,12 +10,15 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Layout;
@@ -65,6 +68,7 @@ import com.google.firebase.database.ValueEventListener;
 import org.w3c.dom.Text;
 
 import java.io.IOException;
+import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,6 +81,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
     DatabaseReference database = //Reference to the Firebase Database which the app is connected with. The connection is stored in the values.xml file
             FirebaseDatabase.getInstance().getReference();
+    FirebaseDatabase firebase = FirebaseDatabase.getInstance();
     DatabaseReference ref = database.child("/Markers");     // Reference on the database child "Markers" where the Markers are stored
     DatabaseReference msg = database.child("/Messages");    // Reference on the database child "Messages" where the Messages "who picks up who" are stroed
     DatabaseReference dest = database.child("/Destination");    // Reference on the database child "Destination" where the destinations are stored
@@ -121,6 +126,44 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         initIfOwnLoc();
         initGettingLocations();
         initDestination();
+        if(!isConnected()) alertNotConnected();
+    }
+
+    // Checks if the User is connected to the Internet
+    public boolean isConnected(){
+        ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        if (activeNetwork != null) {
+            // connected to the internet
+            if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI) {
+                // connected to wifi
+            } else if (activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE) {
+                // connected to mobile data
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    //Alert Dialog to inform the User that he is not connected to the Internet
+    public void alertNotConnected(){
+            AlertDialog alertDialog = new AlertDialog.Builder(MapActivity.this).create();
+            alertDialog.setTitle(getString(R.string.titleNotConnected));
+            alertDialog.setMessage(getString(R.string.notConnected));
+            alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "OK",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+            alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Cancel",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+            alertDialog.show();
     }
 
     public void initSeekBar(){
@@ -332,95 +375,99 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
 // Sets the own Location, which is stored in the firebase db at the Marker reference "ref".
 public void shareLocation(View view){
-    if(searchMarker != null) {
-        fusedLocationClient.getLastLocation()   // Gets the current Location
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        final Location loc = location;
-                        LatLng curr = new LatLng(location.getLatitude(), location.getLongitude());
-                        // Starts an alert Dialog if a Location is already set, prevents the user from spamming the firebase database
-                        if (ownMarker != null) {
-                            AlertDialog alertDialog = new AlertDialog.Builder(MapActivity.this).create();
-                            alertDialog.setTitle(getString(R.string.titleStandortAktual));
-                            alertDialog.setMessage(getString(R.string.standortAktual));
-                            alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "OK",
-                                    new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            dialog.dismiss();
-                                            ownMarker.remove();
-                                            LatLng curr = new LatLng(loc.getLatitude(), loc.getLongitude());    //Creates a LatLng Object with the current Latitude and Longitude
-                                            ownMarker = mGoogleMap.addMarker(new MarkerOptions().position(curr) //Creates a Marker on the Map with the current Location gatherd above
-                                                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.locmarker)));
-                                            ref.child(uid).setValue(curr); // Overrides (if exists) the location stored in the child thats named after the uid and the username
-                                            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(curr)); //Updates the current view on the map to the current location where the Marker is set
-                                        }
-                                    });
-                            alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Cancel",
-                                    new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            dialog.dismiss();
+        if(isConnected()) {
+            if (searchMarker != null) {
+                fusedLocationClient.getLastLocation()   // Gets the current Location
+                        .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                            @Override
+                            public void onSuccess(Location location) {
+                                final Location loc = location;
+                                LatLng curr = new LatLng(location.getLatitude(), location.getLongitude());
+                                // Starts an alert Dialog if a Location is already set, prevents the user from spamming the firebase database
+                                if (ownMarker != null) {
+                                    AlertDialog alertDialog = new AlertDialog.Builder(MapActivity.this).create();
+                                    alertDialog.setTitle(getString(R.string.titleStandortAktual));
+                                    alertDialog.setMessage(getString(R.string.standortAktual));
+                                    alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "OK",
+                                            new DialogInterface.OnClickListener() {
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    dialog.dismiss();
+                                                    ownMarker.remove();
+                                                    LatLng curr = new LatLng(loc.getLatitude(), loc.getLongitude());    //Creates a LatLng Object with the current Latitude and Longitude
+                                                    ownMarker = mGoogleMap.addMarker(new MarkerOptions().position(curr) //Creates a Marker on the Map with the current Location gatherd above
+                                                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.locmarker)));
+                                                    ref.child(uid).setValue(curr); // Overrides (if exists) the location stored in the child thats named after the uid and the username
+                                                    mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(curr)); //Updates the current view on the map to the current location where the Marker is set
+                                                }
+                                            });
+                                    alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Cancel",
+                                            new DialogInterface.OnClickListener() {
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    dialog.dismiss();
 
 
-                                        }
-                                    });
-                            alertDialog.show();
-                        } else {
-                            // If no Location was set, a new Location is saved in the Firebase db
-                            ownMarker = mGoogleMap.addMarker(new MarkerOptions().position(curr)
-                                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.locmarker)));
-                            ref.child(uid).setValue(curr);
-                            //ref.push().getKey();
-                            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(curr));
-                        }
+                                                }
+                                            });
+                                    alertDialog.show();
+                                } else {
+                                    // If no Location was set, a new Location is saved in the Firebase db
+                                    ownMarker = mGoogleMap.addMarker(new MarkerOptions().position(curr)
+                                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.locmarker)));
+                                    ref.child(uid).setValue(curr);
+                                    //ref.push().getKey();
+                                    mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(curr));
+                                }
 
-                    }
-                });
-    } else {
-        // Alert dialog to prevent the user from sharing his location without determining a destination
-        AlertDialog alertDialog = new AlertDialog.Builder(MapActivity.this).create();
-        alertDialog.setTitle(getString(R.string.titleFehlendesZiel));
-        alertDialog.setMessage(getString(R.string.fehlendesZiel));
-        alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "OK",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        RelativeLayout search = findViewById(R.id.relLayout); // Opens the search layout for the user
-                        search.setVisibility(View.VISIBLE);
-                    }
-                });
-        alertDialog.show();
-    }
+                            }
+                        });
+            } else {
+                // Alert dialog to prevent the user from sharing his location without determining a destination
+                AlertDialog alertDialog = new AlertDialog.Builder(MapActivity.this).create();
+                alertDialog.setTitle(getString(R.string.titleFehlendesZiel));
+                alertDialog.setMessage(getString(R.string.fehlendesZiel));
+                alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "OK",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                RelativeLayout search = findViewById(R.id.relLayout); // Opens the search layout for the user
+                                search.setVisibility(View.VISIBLE);
+                            }
+                        });
+                alertDialog.show();
+            }
+        } else {
+            alertNotConnected();
+        }
 }
 
     // Deletes the own Location, starts an alert button to confirm the delete
     public void delLocation(){
-        String message = getString(R.string.standortLoeschen);
-        if(messageActive()){
-            message = message + getString(R.string.wirstAbgeholt);
-        }
-        AlertDialog alertDialog = new AlertDialog.Builder(MapActivity.this).create();
-        alertDialog.setTitle(getString(R.string.titleStandortLoeschen));
-        alertDialog.setMessage(message);
-        alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "OK",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        ref.child(uid).removeValue();
-                        msg.child(uid).removeValue(); // If a message is stored in the message reference that references the hiker uid, the Driver who was supposed to pick up the hiker will be informed about the removed Location
-                        if(ownMarker != null){ // Preventing NullPointerException
-                            ownMarker.remove();
-                            ownMarker = null;
+            String message = getString(R.string.standortLoeschen);
+            if (messageActive()) {
+                message = message + getString(R.string.wirstAbgeholt);
+            }
+            AlertDialog alertDialog = new AlertDialog.Builder(MapActivity.this).create();
+            alertDialog.setTitle(getString(R.string.titleStandortLoeschen));
+            alertDialog.setMessage(message);
+            alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "OK",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            ref.child(uid).removeValue();
+                            msg.child(uid).removeValue(); // If a message is stored in the message reference that references the hiker uid, the Driver who was supposed to pick up the hiker will be informed about the removed Location
+                            if (ownMarker != null) { // Preventing NullPointerException
+                                ownMarker.remove();
+                                ownMarker = null;
+                            }
                         }
-                    }
-                });
-        alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Cancel",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-        alertDialog.show();
+                    });
+            alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Cancel",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+            alertDialog.show();
     }
 
     // Method for reuse purpose, sets a Marker at a given location and stores the uid of the hiker (who has pushed this location) as a key in the snippet of the Marker. The key is to assign the Markers to the respective Hikers
@@ -583,30 +630,34 @@ public void shareLocation(View view){
     }
 
     public void onSearch (View view){
-        RelativeLayout search = findViewById(R.id.relLayout);
-        searchBar = findViewById(R.id.search_bar);
-        String destination = searchBar.getText().toString();
-        Geocoder geocoder = new Geocoder(this);
-        List<Address> list = new ArrayList<>();
-        try{
-            list = geocoder.getFromLocationName(destination, 1);
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-        if(list.size() > 0){
-            //Toast.makeText(this,list.get(0).toString(), Toast.LENGTH_LONG).show();
-            Address address = list.get(0);
-            LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
-            CameraUpdate update = CameraUpdateFactory.newLatLngZoom(latLng, 16);
-            mGoogleMap.animateCamera(update);
-            if(searchMarker != null){
-                searchMarker.remove();
-                //dest.child(uid).removeValue();
+        if(isConnected()) {
+            RelativeLayout search = findViewById(R.id.relLayout);
+            searchBar = findViewById(R.id.search_bar);
+            String destination = searchBar.getText().toString();
+            Geocoder geocoder = new Geocoder(this);
+            List<Address> list = new ArrayList<>();
+            try {
+                list = geocoder.getFromLocationName(destination, 1);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            searchMarker = mGoogleMap.addMarker(new MarkerOptions().position(latLng).title(getString(R.string.deinZiel) + address.getAddressLine(0)).icon(BitmapDescriptorFactory.fromResource(R.drawable.finishmarker)));
-            dest.child(uid).setValue(address.getAddressLine(0));
-            MainActivity.hideKeyboard(this);
-            search.setVisibility(View.INVISIBLE);
+            if (list.size() > 0) {
+                //Toast.makeText(this,list.get(0).toString(), Toast.LENGTH_LONG).show();
+                Address address = list.get(0);
+                LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+                CameraUpdate update = CameraUpdateFactory.newLatLngZoom(latLng, 16);
+                mGoogleMap.animateCamera(update);
+                if (searchMarker != null) {
+                    searchMarker.remove();
+                    //dest.child(uid).removeValue();
+                }
+                searchMarker = mGoogleMap.addMarker(new MarkerOptions().position(latLng).title(getString(R.string.deinZiel) + address.getAddressLine(0)).icon(BitmapDescriptorFactory.fromResource(R.drawable.finishmarker)));
+                dest.child(uid).setValue(address.getAddressLine(0));
+                MainActivity.hideKeyboard(this);
+                search.setVisibility(View.INVISIBLE);
+            }
+        } else {
+            alertNotConnected();
         }
     }
 
@@ -656,8 +707,12 @@ public void shareLocation(View view){
                             new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int which) {
                                     dialog.dismiss();
-                                    dest.child(userid).removeValue();
-                                    searchMarker.remove();
+                                    if(isConnected()) {
+                                        dest.child(userid).removeValue();
+                                        searchMarker.remove();
+                                    } else {
+                                        alertNotConnected();
+                                    }
                                 }
                             });
                     alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Cancel",
@@ -690,51 +745,55 @@ public void shareLocation(View view){
 
     // This function changes the profile type the user is using
     public void changeProfile(View view) {
+        if(isConnected()) {
+            final Button carPerson = findViewById(R.id.profileTypeBtn);
+            final Button markerBtn = findViewById(R.id.markerBtn);
+            final ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) carPerson.getLayoutParams();
+            if (profileType == "Driver") {
+                // Alerts the user if a pickup message was sent before, so the user cant change the profile unless he deletes the message
+                msg.addListenerForSingleValueEvent(new ValueEventListener() { // Checks the firebase db if a pickup message was sent by the user
+                    boolean alert = false;
 
-        final Button carPerson = findViewById(R.id.profileTypeBtn);
-        final Button markerBtn = findViewById(R.id.markerBtn);
-        final ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) carPerson.getLayoutParams();
-        if (profileType == "Driver") {
-            // Alerts the user if a pickup message was sent before, so the user cant change the profile unless he deletes the message
-            msg.addListenerForSingleValueEvent(new ValueEventListener() { // Checks the firebase db if a pickup message was sent by the user
-                boolean alert = false;
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    for(DataSnapshot child: dataSnapshot.getChildren()){
-                            if(child.child("/driverID").getValue().equals(userid)) alert = true;
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        for (DataSnapshot child : dataSnapshot.getChildren()) {
+                            if (child.child("/driverID").getValue().equals(userid)) alert = true;
+                        }
+                        if (alert) {
+                            profileAlert();
+                        } else {
+                            setHiker(markerBtn, carPerson, params);
+                            setButtonVisibility(false);
+                        }
                     }
-                    if(alert){
-                        profileAlert();
-                    } else {
-                        setHiker(markerBtn, carPerson, params);
-                        setButtonVisibility(false);
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
                     }
+                });
+
+                // Can only change to Driver Mode if the user has no own Location online
+            } else if (profileType == "Hitchhiker") {
+                if (ownMarker != null) {
+                    AlertDialog alertDialog = new AlertDialog.Builder(MapActivity.this).create();
+                    alertDialog.setTitle(getString(R.string.achtung));
+                    alertDialog.setMessage(getString(R.string.modusWechselnFahrer));
+                    alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "OK",
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            });
+                    alertDialog.show();
+                } else {
+                    setDriver(markerBtn, carPerson, params);
                 }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                }
-            });
-
-            // Can only change to Driver Mode if the user has no own Location online
-        } else if (profileType == "Hitchhiker") {
-            if(ownMarker != null) {
-                AlertDialog alertDialog = new AlertDialog.Builder(MapActivity.this).create();
-                alertDialog.setTitle(getString(R.string.achtung));
-                alertDialog.setMessage(getString(R.string.modusWechselnFahrer));
-                alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "OK",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        });
-                alertDialog.show();
             } else {
-                setDriver(markerBtn, carPerson, params);
+                // Nothing
             }
         } else {
-            // Nothing
+            alertNotConnected();
         }
     }
 
@@ -969,49 +1028,84 @@ public void shareLocation(View view){
             }
             return true;
         } else if (mymarker.equals(del)) { // Deletes the users location marker and delete marker if clicked
-            delLocation();
-            removeDel();
+            if (isConnected()) {
+                delLocation();
+                removeDel();
+            } else {
+                alertNotConnected();
+            }
+        } else if (mymarker.equals(searchMarker)){
+            //Nothing
         } else { // Differs based on the current Profile Type, if a driver clicks on a marker, the pickup buttons and hiker information will be shown on the map
             if(profileType != "Hitchhiker") {
-                final Button getHim = findViewById(R.id.getHimBtn);
-                final Button leaveHim = findViewById(R.id.leaveHimBtn);
-                final String snipID = "/" + mymarker.getSnippet();  //Represents the hikers key in the firebase db
-                final String[] hikerSnip = mymarker.getSnippet().split("_"); //Splits the Snippet of the Hiker Marker into the hikers uid and the hikers name. The name is shown to the driver
-                final String hikerName = hikerSnip[1];
-                final String[] hikerDest = new String[1]; // Array to store the destination information gathered from the firebase request below
-                dest.addListenerForSingleValueEvent(new ValueEventListener() {  // Gets the hikers destination from the firebase db
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        for(DataSnapshot child: dataSnapshot.getChildren()){
-                            if(child.getKey().equals(mymarker.getSnippet())){
-                                 hikerDest[0] = child.getValue().toString(); // Stores the hikers destination in the hikerDest String Array at index 0
-                            }
-                        }
-                        showHikerInfo(hikerName, hikerDest[0]);
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                });
-                if(getHim.getVisibility() == View.VISIBLE) { // to remove the pickup Buttons
-                    setButtonVisibility(false);
-                } else {
-                    setButtonVisibility(true);
-                    getHim.setOnClickListener(new View.OnClickListener() {
+                if(isConnected()){
+                    final Button getHim = findViewById(R.id.getHimBtn);
+                    final Button leaveHim = findViewById(R.id.leaveHimBtn);
+                    final String snipID = "/" + mymarker.getSnippet();  //Represents the hikers key in the firebase db
+                    final String[] hikerSnip = mymarker.getSnippet().split("_"); //Splits the Snippet of the Hiker Marker into the hikers uid and the hikers name. The name is shown to the driver
+                    final String hikerName = hikerSnip[1];
+                    final String[] hikerDest = new String[1]; // Array to store the destination information gathered from the firebase request below
+                    dest.addListenerForSingleValueEvent(new ValueEventListener() {  // Gets the hikers destination from the firebase db
                         @Override
-                        public void onClick(View v) {    // To send a pickup message to the hiker
-                            try { // prevents a NullPointerException, if the hiker deletes his location the moment before the driver sends the message
-                                ref.addListenerForSingleValueEvent(new ValueEventListener() {
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            for (DataSnapshot child : dataSnapshot.getChildren()) {
+                                if (child.getKey().equals(mymarker.getSnippet())) {
+                                    hikerDest[0] = child.getValue().toString(); // Stores the hikers destination in the hikerDest String Array at index 0
+                                }
+                            }
+                            showHikerInfo(hikerName, hikerDest[0]);
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
+                    if (getHim.getVisibility() == View.VISIBLE) { // to remove the pickup Buttons
+                        setButtonVisibility(false);
+                    } else {
+                        setButtonVisibility(true);
+                        getHim.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {    // To send a pickup message to the hiker
+                                try { // prevents a NullPointerException, if the hiker deletes his location the moment before the driver sends the message
+                                    ref.addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                            if (dataSnapshot.child(snipID).exists()) {
+                                                writeNewMsg(userid, getMsg, snipID);
+                                                mymarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.locmarkergreen)); // The hiker the driver wants to collect is shown with a green location marker
+                                                Toast.makeText(MapActivity.this, getString(R.string.messageTo) + hikerName + getString(R.string.sent), Toast.LENGTH_SHORT).show();
+                                            } else {
+                                                Toast.makeText(MapActivity.this, getString(R.string.messageFail), Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                        }
+                                    });
+                                    setButtonVisibility(false);
+                                } catch (Exception e) {
+                                    setButtonVisibility(false);
+                                }
+                            }
+                        });
+                    }
+                    leaveHim.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            try {   // Same with the leaveHim Button, the try catch prevents a NullPointerException if the hiker deletes his location
+                                msg.addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                        if(dataSnapshot.child(snipID).exists()) {
-                                            writeNewMsg(userid, getMsg, snipID);
-                                            mymarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.locmarkergreen)); // The hiker the driver wants to collect is shown with a green location marker
-                                            Toast.makeText(MapActivity.this, getString(R.string.messageTo) + hikerName + getString(R.string.sent), Toast.LENGTH_SHORT).show();
-                                        } else {
-                                            Toast.makeText(MapActivity.this, getString(R.string.messageFail), Toast.LENGTH_SHORT).show();
+                                        for (DataSnapshot child : dataSnapshot.getChildren()) {
+                                            if (dataSnapshot.hasChild(snipID)) {
+                                                if (dataSnapshot.child(snipID).child("/driverID").getValue().toString().equals(userid)) {
+                                                    msg.child(snipID).removeValue();
+                                                }
+                                            }
                                         }
                                     }
 
@@ -1020,45 +1114,21 @@ public void shareLocation(View view){
 
                                     }
                                 });
-                                    setButtonVisibility(false);
-                            } catch(Exception e) {
+                                setButtonVisibility(false);
+                                mymarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.locmarkeryellow));
+                                Toast toast = Toast.makeText(MapActivity.this, getString(R.string.schade), Toast.LENGTH_SHORT);
+                                TextView vv = (TextView) toast.getView().findViewById(android.R.id.message);
+                                if (vv != null)
+                                    vv.setGravity(Gravity.CENTER); // Centers the string within the Toast Message
+                                toast.show();
+                            } catch (Exception e) {
                                 setButtonVisibility(false);
                             }
                         }
                     });
+                } else {
+                    alertNotConnected();
                 }
-                leaveHim.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        try {   // Same with the leaveHim Button, the try catch prevents a NullPointerException if the hiker deletes his location
-                            msg.addListenerForSingleValueEvent(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                    for (DataSnapshot child : dataSnapshot.getChildren()) {
-                                        if (dataSnapshot.hasChild(snipID)) {
-                                            if (dataSnapshot.child(snipID).child("/driverID").getValue().toString().equals(userid)) {
-                                                msg.child(snipID).removeValue();
-                                            }
-                                        }
-                                    }
-                                }
-
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                }
-                            });
-                            setButtonVisibility(false);
-                            mymarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.locmarkeryellow));
-                            Toast toast = Toast.makeText(MapActivity.this, getString(R.string.schade), Toast.LENGTH_SHORT);
-                            TextView vv = (TextView) toast.getView().findViewById(android.R.id.message);
-                            if (vv != null) vv.setGravity(Gravity.CENTER); // Centers the string within the Toast Message
-                            toast.show();
-                        } catch(Exception e) {
-                            setButtonVisibility(false);
-                        }
-                    }
-                });
             }
         }
         //return true;

@@ -7,9 +7,14 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -46,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         reqPermissions();
+        if(!isConnected()) alertNotConnected();
         Name = (EditText)findViewById(R.id.etName);
         Password = (EditText)findViewById(R.id.etPassword);
         //Info = (TextView)findViewById(R.id.tvInfo);
@@ -64,12 +70,16 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(MainActivity.this, MapActivity.class));
         }
 
-        // Logs the user, if the validation is successful
+        // Logs in the user, if the validation is successful
         Login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                hideKeyboard(MainActivity.this);
-                validate(Name.getText().toString(), Password.getText().toString());
+                if(isConnected()) {
+                    hideKeyboard(MainActivity.this);
+                    validate(Name.getText().toString(), Password.getText().toString());
+                } else {
+                    alertNotConnected();
+                }
             }
         });
 
@@ -168,6 +178,43 @@ public class MainActivity extends AppCompatActivity {
             view = new View(activity);
         }
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+    // Checks if the User is connected to the Internet
+    public boolean isConnected(){
+        ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        if (activeNetwork != null) {
+            // connected to the internet
+            if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI) {
+                // connected to wifi
+            } else if (activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE) {
+                // connected to mobile data
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    //Alert Dialog to inform the User that he is not connected to the Internet
+    public void alertNotConnected(){
+            AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+            alertDialog.setTitle(getString(R.string.titleNotConnected));
+            alertDialog.setMessage(getString(R.string.notConnected));
+            alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "OK",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+            alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Cancel",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+            alertDialog.show();
     }
 
 }

@@ -44,6 +44,7 @@
     <string name="messageFail">Message failed.</string>
     <string name="titelZielLoesch">Remove destination?</string>
     <string name="stringZielLoesch">Do you want to remove your destination?</string>
-
+    <string name="notConnected">You are not connected to the Internet, please check your mobile data!\nThe app may not fully function.</string>
+    <string name="titleNotConnected">Connection Failed!</string>
 
 </resources>
