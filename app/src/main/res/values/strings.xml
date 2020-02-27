@@ -45,5 +45,6 @@
     <string name="stringZielLoesch">Wollen Sie ihr Ziel löschen?</string>
     <string name="notConnected">Du bist nicht mit dem Internet verbunden, bitte überprüfe deine Mobilen Daten!\nDie App funktioniert nur eingeschränkt.</string>
     <string name="titleNotConnected">Nicht verbunden!</string>
+    <string name="driverMessage">\u0020ist auf dem weg zu dir, bleib einfach wo du bist!</string>
 
 </resources>

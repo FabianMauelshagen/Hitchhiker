@@ -548,7 +548,7 @@ public void shareLocation(View view){
                     mailButton.setVisibility(View.VISIBLE);
                     TextView msgText = findViewById(R.id.msg_window);
                         String msg = dataSnapshot.child("/message").getValue().toString();
-                        msgText.setText(msg);
+                        msgText.setText(msg + getString(R.string.driverMessage));
                 }
             }
 

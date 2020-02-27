@@ -46,5 +46,6 @@
     <string name="stringZielLoesch">Do you want to remove your destination?</string>
     <string name="notConnected">You are not connected to the Internet, please check your mobile data!\nThe app may not fully function.</string>
     <string name="titleNotConnected">Connection Failed!</string>
+    <string name="driverMessage">\u0020is on the way to you, sit tight!</string>
 
 </resources>
